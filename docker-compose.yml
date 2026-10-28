@@ -1,0 +1,28 @@
+services:
+  rate-limiter:
+    build: .
+    image: multi-tenant-rate-limiter:latest
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: "3000"
+      FAIL_MODE: "open"            # open | closed
+      ADMIN_TOKEN: "change-me"     # required as Bearer token for reset / policy updates
+      MAX_TRACKED_KEYS_PER_POLICY: "1000000"
+      SWEEP_INTERVAL_MS: "5000"
+      POLICY_FILE: "config/policies.json"
+      # Cap V8 old-space so we hit our own key caps long before the container OOM-kills us.
+      NODE_OPTIONS: "--max-old-space-size=1024"
+    volumes:
+      - ./config:/app/config:ro
+    restart: unless-stopped
+
+  # One-shot test runner: `docker compose run --rm tests`
+  tests:
+    image: node:22-alpine
+    working_dir: /app
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    command: sh -c "npm ci && npm test"
+    profiles: ["test"]

@@ -1,0 +1,106 @@
+{
+  "tenants": [
+    {
+      "tenantId": "org-acme-prod",
+      "policies": [
+        {
+          "id": "tenant-global",
+          "name": "Tenant-wide pool (5,000 req/s)",
+          "scope": "tenant",
+          "algorithm": "token-bucket",
+          "capacity": 5000,
+          "refillRatePerSecond": 5000,
+          "keyStrategy": { "dimensions": [] },
+          "priorityWeights": { "critical": 1, "standard": 0.95, "background": 0.9 }
+        },
+        {
+          "id": "per-user",
+          "name": "Per authenticated user (50 req/s, burst 150)",
+          "scope": "client",
+          "algorithm": "token-bucket",
+          "capacity": 150,
+          "refillRatePerSecond": 50,
+          "keyStrategy": { "dimensions": ["userId"] }
+        },
+        {
+          "id": "per-ip",
+          "name": "Per client IP / IPv6 /64 (generous: CGNAT & offices share IPs)",
+          "scope": "client",
+          "algorithm": "sliding-window",
+          "capacity": 3000,
+          "windowSizeSeconds": 60,
+          "keyStrategy": { "dimensions": ["ip"], "ipv6SubnetMask": 64 }
+        },
+        {
+          "id": "payments",
+          "name": "POST /api/v1/payments per user",
+          "scope": "client",
+          "algorithm": "sliding-window",
+          "capacity": 100,
+          "windowSizeSeconds": 60,
+          "keyStrategy": { "dimensions": ["userId", "route"] },
+          "match": { "methods": ["POST"], "routes": ["/api/v1/payments"] }
+        },
+        {
+          "id": "login",
+          "name": "Brute-force guard on POST /auth/login per IP",
+          "scope": "client",
+          "algorithm": "sliding-window",
+          "capacity": 5,
+          "windowSizeSeconds": 60,
+          "keyStrategy": { "dimensions": ["ip", "route"], "ipv6SubnetMask": 64 },
+          "match": { "methods": ["POST"], "routes": ["/auth/login"] }
+        },
+        {
+          "id": "checkout",
+          "name": "POST /checkout per user, strict pacing",
+          "scope": "client",
+          "algorithm": "leaky-bucket",
+          "capacity": 10,
+          "refillRatePerSecond": 1,
+          "keyStrategy": { "dimensions": ["userId", "route"] },
+          "match": { "methods": ["POST"], "routes": ["/checkout"] }
+        }
+      ]
+    },
+    {
+      "tenantId": "org-globex-prod",
+      "policies": [
+        {
+          "id": "tenant-global",
+          "name": "Tenant-wide pool (1,000 req/s)",
+          "algorithm": "sliding-window",
+          "capacity": 1000,
+          "windowSizeSeconds": 1,
+          "keyStrategy": { "dimensions": [] }
+        },
+        {
+          "id": "per-api-key",
+          "name": "Per API key (X-Api-Key header)",
+          "algorithm": "token-bucket",
+          "capacity": 100,
+          "refillRatePerSecond": 20,
+          "keyStrategy": { "dimensions": ["header"], "headerName": "x-api-key" }
+        }
+      ]
+    }
+  ],
+  "defaultTenantPolicies": [
+    {
+      "id": "tenant-global",
+      "name": "Default tenant pool",
+      "algorithm": "token-bucket",
+      "capacity": 500,
+      "refillRatePerSecond": 500,
+      "keyStrategy": { "dimensions": [] }
+    },
+    {
+      "id": "per-ip",
+      "name": "Default per-IP limit",
+      "algorithm": "token-bucket",
+      "capacity": 100,
+      "refillRatePerSecond": 20,
+      "keyStrategy": { "dimensions": ["ip"], "ipv6SubnetMask": 64 }
+    }
+  ]
+}

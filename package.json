@@ -1,0 +1,32 @@
+{
+  "name": "multi-tenant-rate-limiter",
+  "version": "1.0.0",
+  "description": "In-memory multi-tenant rate limiting & traffic shaping service",
+  "main": "dist/server.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "start": "node dist/server.js",
+    "dev": "tsx watch src/server.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "bench": "tsx scripts/bench.ts",
+    "bench:memory": "node --expose-gc --import tsx scripts/memory.ts",
+    "example:express": "tsx examples/express-app.ts"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.20.5",
+    "tsx": "^4.23.15",
+    "typescript": "~5.9",
+    "vitest": "^3.2.7"
+  },
+  "dependencies": {
+    "express": "^5.3.0"
+  }
+}

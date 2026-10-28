@@ -1,0 +1,8 @@
+node_modules/
+dist/
+coverage/
+*.log
+.DS_Store
+
+# personal study notes (not part of the submission)
+מדריך-לימוד.html
